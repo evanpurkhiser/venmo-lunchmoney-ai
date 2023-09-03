@@ -1,9 +1,9 @@
 import argparse
 import json
+import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
-import logging
 from os import getenv
 from typing import List
 
