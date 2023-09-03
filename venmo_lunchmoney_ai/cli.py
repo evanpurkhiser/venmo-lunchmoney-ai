@@ -73,6 +73,14 @@ def run_cli():
     openai.api_key = args.openai_token
 
     categories = lunch.get_categories()
+
+    try:
+        venmo_category = next(c for c in categories if c.name == args.venmo_category)
+    except StopIteration:
+        # TODO: What kind of error to show?
+        logging.error(f"Cannot find Lunch Money category {args.venmo_category}")
+        return
+
     transactions = lunch.get_transactions(
         status="uncleared",
         start_date=datetime.now() - timedelta(days=CUTOFF_DAYS),
@@ -82,7 +90,7 @@ def run_cli():
 
     transactions_map = {t.id: t for t in transactions}
 
-    messages = build_promp_messages(args.venmo_category, categories, transactions)
+    messages = build_promp_messages(venmo_category.name, categories, transactions)
 
     # Ask chat GPT how to group venmo transactions
     response = openai.ChatCompletion.create(model="gpt-4", messages=messages)
