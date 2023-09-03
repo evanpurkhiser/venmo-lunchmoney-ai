@@ -1,16 +1,18 @@
 import csv
 import io
 from typing import List
+
 from lunchable.models import CategoriesObject, TransactionObject
 
 PROMPT = """
 You are given a CSV of my personal bank transactions. Positive amounts are
-income, negative are expenses. You will match transactions in the `{category}`
-category to any other  transaction that is not in the `{category}` category. It is
-possible that many `{category}` transactions match one main transaction. Once a
-`{category}` transaction has become part of a main transaction group, it should
-not be part of any other groups. You should use the `notes` column of the
-`{category}` transaction to try to match the `payee` of candidate transactions.
+expenses, negative are income. You will match reimbursemen transactions in the
+`{category}` category to any other  transaction that is not in the `{category}`
+category. It is possible that many `{category}` transactions match one main
+transaction. Once a `{category}` transaction has become part of a main
+transaction group, it should not be part of any other groups. You should use
+the `notes` column of the `{category}` transaction to try to match the `payee`
+of candidate transactions.
 
 If a non `{category}` transaction has the tag `Pending Venmo` we can have very
 high confidence that it will have matching `{category}` transactions.

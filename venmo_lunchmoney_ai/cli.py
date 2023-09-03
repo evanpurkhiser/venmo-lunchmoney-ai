@@ -85,7 +85,6 @@ def run_cli():
         status="uncleared",
         start_date=datetime.now() - timedelta(days=CUTOFF_DAYS),
         end_date=datetime.now(),
-        debit_as_negative=True,
     )
 
     transactions_map = {t.id: t for t in transactions}
@@ -109,10 +108,10 @@ def run_cli():
         venmos = [transactions_map[id] for id in group.matches]
 
         print("")
-        print(f"{main.payee} (${abs(main.amount)})")
+        print(f"{main.payee} (${main.amount})")
         for venmo in venmos:
             print(f" -> {venmo.payee} paid ${abs(venmo.amount)} [note: {venmo.notes}]")
 
-        you_pay = abs(Decimal(str(main.amount)) + sum(Decimal(str(v.amount)) for v in venmos))
+        you_pay = Decimal(str(main.amount)) - sum(Decimal(str(abs(v.amount))) for v in venmos)
         print(f" -> (you paid ${you_pay})")
         print(f" ?? {group.confidence_reason}")
