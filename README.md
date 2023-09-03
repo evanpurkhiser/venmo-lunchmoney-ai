@@ -1,11 +1,10 @@
 ## Venmo Lunchmoney AI Tool
 
+> [!IMPORTANT]
+> This is still a work in progress!
+
 This is a small tool that uses GPT-4 to try and match one or many Venmo
 reimbursement transactions in [Lunch Money](https://lunchmoney.app/) to the transaction that is being reimbursed.
-
-This is a small tool for automatically cashing out your Venmo balance such that
-each individual payment you receive will have an associated bank-transfer
-generated.
 
 This tool pairs very well with
 [venmo-auto-cashout](https://github.com/evanpurkhiser/venmo-auto-cashout)
@@ -29,6 +28,3 @@ Ramen Nagi ($60.76)
  -> (you paid $20.25)
  ?? Amount evenly divides and exact payee name is in the note
 ```
-
-> [!IMPORTANT]
-> This is still a work in progress!
