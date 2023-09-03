@@ -12,7 +12,6 @@ from lunchable import LunchMoney
 
 from venmo_lunchmoney_ai.prompt import build_promp_messages
 
-
 CUTOFF_DAYS = 60
 """
 How many days worth of transactions should we look back. We're only included
