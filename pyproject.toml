@@ -31,6 +31,8 @@ line_length = 100
 lines_between_sections = 1
 skip = "migrations"
 
-[tool.pyright]
-include = ["venmo_auto_cashout"]
-extraPaths = ["__pypackages__/3.9/lib"]
+[tool.pdm.dev-dependencies]
+dev = [
+    "black>=23.7.0",
+    "isort>=5.12.0",
+]
