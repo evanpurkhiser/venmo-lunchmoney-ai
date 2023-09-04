@@ -7,6 +7,7 @@ from os import getenv
 import openai
 from lunchable import LunchMoney
 
+from venmo_lunchmoney_ai.grouping import create_lunchmoney_group
 from venmo_lunchmoney_ai.prompt import build_prompt_messages
 from venmo_lunchmoney_ai.types import ReimbursmentGroup
 
@@ -28,6 +29,13 @@ def run_cli():
     )
 
     parser.add_argument(
+        "-v",
+        "--verbose",
+        help="increase output verbosity",
+        action="store_true",
+    )
+
+    parser.add_argument(
         "--lunchmoney-token",
         type=str,
         default=getenv("LUNCHMONEY_TOKEN"),
@@ -40,9 +48,16 @@ def run_cli():
     parser.add_argument(
         "--venmo-category",
         type=str,
-        default=getenv("LUNCHMONEY_CATEGORY"),
+        default=getenv("VENMO_CATEGORY"),
         help="The category which contains un-sorted venmo transactions",
     )
+    parser.add_argument(
+        "--reimbursed-category",
+        type=str,
+        default=getenv("REIMBURSED_CATEGORY"),
+        help="The category that grouped reimbursments will become a part of",
+    )
+
     parser.add_argument(
         "--reimbursement-tag",
         type=str,
@@ -52,6 +67,9 @@ def run_cli():
 
     args = parser.parse_args()
 
+    if args.verbose:
+        logging.basicConfig(level=logging.DEBUG)
+
     lunch = LunchMoney(access_token=args.lunchmoney_token)
     openai.api_key = args.openai_token
 
@@ -59,14 +77,20 @@ def run_cli():
     try:
         venmo_category = next(c for c in categories if c.name == args.venmo_category)
     except StopIteration:
-        logging.error(f"Cannot find Lunch Money category {args.venmo_category}")
+        logger.error(f"Cannot find Lunch Money category {args.venmo_category}")
+        return
+
+    try:
+        reimbursed_category = next(c for c in categories if c.name == args.reimbursed_category)
+    except StopIteration:
+        logger.error(f"Cannot find Lunch Money category {args.reimbursed_category}")
         return
 
     tags = lunch.get_tags()
     try:
         reimbursement_tag = next(t for t in tags if t.name == args.reimbursement_tag)
     except StopIteration:
-        logging.error(f"Cannot find Lunch Money tag {args.reimbursement_tag}")
+        logger.error(f"Cannot find Lunch Money tag {args.reimbursement_tag}")
         return
 
     # Reduce the transaction to just candidate transactions. These transactions
@@ -92,6 +116,8 @@ def run_cli():
         )
     ]
 
+    logger.info(f"Got {len(transactions)} candidate transactions from Lunchmoney")
+
     venmos = [t for t in transactions if t.category_id == venmo_category.id]
     main_transactions = [t for t in transactions if t.category_id != venmo_category.id]
 
@@ -116,7 +142,7 @@ def run_cli():
         assert isinstance(response, dict)
         json_response = json.loads(response["choices"][0]["message"]["content"])
     except:
-        logging.warn("Unexpected GPT-4 response", extra={"response": response})
+        logger.warn("Unexpected GPT-4 response", extra={"response": response})
         return
 
     groups = [
@@ -131,6 +157,9 @@ def run_cli():
     ]
 
     for group in groups:
+        if not group.missing_reimbursements:
+            create_lunchmoney_group(lunch, reimbursed_category, group)
+
         print("")
         print(f"{group.transaction.payee} (${group.transaction.amount})")
         for venmo in group.matches:

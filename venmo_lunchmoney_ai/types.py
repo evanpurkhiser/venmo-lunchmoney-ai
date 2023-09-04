@@ -34,7 +34,11 @@ class ReimbursmentGroup:
         """
         Computes how much was not reimbursed for the transaction
         """
-        main_amount = Decimal(str(self.transaction.amount))
-        reimbursed = sum(Decimal(str(abs(v.amount))) for v in self.matches)
+        return Decimal(str(self.transaction.amount)) - self.they_pay
 
-        return float(main_amount - reimbursed)
+    @property
+    def they_pay(self):
+        """
+        Computes how much was reimbursed for the transaction
+        """
+        return sum(Decimal(str(abs(match.amount))) for match in self.matches)
