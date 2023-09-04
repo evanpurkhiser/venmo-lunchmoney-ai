@@ -6,30 +6,26 @@ from lunchable.models import CategoriesObject, TransactionObject
 
 PROMPT = """
 You are given a CSV of my personal bank transactions. Positive amounts are
-expenses, negative are income. You will match reimbursement transactions in the
-`{category}` category to any other  transaction that is not in the `{category}`
-category. It is possible that many `{category}` transactions match one main
-transaction. Once a `{category}` transaction has become part of a main
-transaction group, it should not be part of any other groups. You should use
-the `notes` column of the `{category}` transaction to try to match the `payee`
-of candidate transactions.
-
-If a non `{category}` transaction has the tag `Pending Venmo` we can have very
-high confidence that it will have matching `{category}` transactions.
+income, negative are expenses. Match transactions in the `{category}` category
+to any other  transaction that is not in the `{category}` category. It is
+possible that many `{category}` transactions match one main transaction. Once a
+`{category}` transaction becomes part of a main transaction group, it should
+not be part of any other groups. Use the `notes` column of the `{category}`
+transaction to try to match the `payee` of candidate transactions.
 
 A `{category}` transaction is a reimbursement from a friend because I paid for
-something. The following is an example
+something. Example:
 
 ```csv
 transaction_id,category,payee,amount,notes,original_name
 242330919,{category},Eric,6,"Thanks for Boba Guys",Venmo
-242330918,Snack,"Boba Guys",-12,"",BOBAGUYS
-242330917,Gas,"BP Gas",-24,"",BP
+242330918,Snack,"Boba Guys",-12,"Waiting on Eric",BOBAGUYS
+242330917,Gas,"BP Gas",-24,"Waiting on Ryan",BP
 ```
 
 In the example, I paid for "Boba Guys". Eric then reimbursed me $6 for his
 portion. We have HIGH confidence these match since it is an even split of the
-cost of my item and his item.
+cost of my item and his item and the note mentions "Waiting on Eric".
 
 In some cases, the reimbursements may not perfectly divide into the main
 transaction amount, my portion may have been more or less. In MOST cases a
@@ -37,9 +33,17 @@ portion of the main transaction is something I myself paid for. There may be
 cases where I pay for something, and the entire cost is covered by `{category}`
 transactions, though it is rare.
 
-Be aware, the `notes` column is user input from the friend reimbursing me, so
-will not usually perfectly match the payee name. If it does perfectly match
-then we have a very high confidence.
+Main transactions must ALWAYS included a note that either mentions the names of
+the people I expect to reimburse me for the transaction OR the number of
+reimbursements I expect. We calculate a `missing_reimbursements` boolean. For
+example if a transaction specifies we're waiting on Eric, Randolf, and Joe, but
+there is only a `{category}` reimbursement from Randolf, then the value is
+true. If a note containing this information is missing do not include this
+transaction group in your response.
+
+Be aware, the `notes` column for `{category}` transactions is user input from
+the friend reimbursing me, so will not usually perfectly match the payee name.
+If it does perfectly match then we have a very high confidence.
 
 Your output for this example is as follows.
 
@@ -48,6 +52,7 @@ Your output for this example is as follows.
   {{
     "transaction_id": 242330918,
     "matches": [242330919],
+    "missing_reimbursements": false,
     "confidence": 0.9,
     "confidence_reason": "Amount evently divides and exact payee name is in the note"
   }}
@@ -67,16 +72,18 @@ Your output for this example is as follows.
   that case that someone is paying me for something they bought from me, not
   reimbursing me.
 
-- DO NOT write code, you are doing the actual matching.
-- ONLY output valid machine-readable JSON nothing else. DO NOT explain or ask
-  for clarification.
-
 From the following CSV please produce a mapping of regular transactions to the
 one or many `{category}` transactions. Please also include a confidence score
 between 0 and 1 per group of transactions, this can be calculated based on how
 closely the `notes` match the main transaction `payee` as well as how evenly
-the `{category}` transactions divide into the main transaction. Only include items
-that have at least a `0.4` confidence score.
+the `{category}` transactions divide into the main transaction. Only include
+items that have at least a `0.4` confidence score.
+
+**IMPORTANT**: Please ONLY provide the response in machine-readable JSON
+format. No explanations, no clarifications, and no additional context. Simply
+output the valid JSON based on the data provided.
+
+**DO NOT write code**, you are doing the actual matching.
 """
 
 
@@ -97,7 +104,7 @@ def table_to_csv_string(table):
     return output.getvalue()
 
 
-def build_promp_messages(
+def build_prompt_messages(
     category: str,
     categories: List[CategoriesObject],
     transaction_list: List[TransactionObject],

@@ -1,44 +1,25 @@
 import argparse
 import json
 import logging
-from dataclasses import dataclass
 from datetime import datetime, timedelta
-from decimal import Decimal
 from os import getenv
-from typing import List
 
 import openai
 from lunchable import LunchMoney
 
-from venmo_lunchmoney_ai.prompt import build_promp_messages
+from venmo_lunchmoney_ai.prompt import build_prompt_messages
+from venmo_lunchmoney_ai.types import ReimbursmentGroup
 
 CUTOFF_DAYS = 60
 """
 How many days worth of transactions should we look back. We're only included
-unreviewed transactions, so this can be high.
+unreviewed transactions, so this can be a very large number.
+
+This only needs to be as high as how long we might expect for someone to
+"delay" sending in a venmo reimbursement for something.
 """
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass
-class ReimbursmentGroup:
-    transaction_id: int
-    """
-    The main transaction which money is being reimbursed to
-    """
-    matches: List[int]
-    """
-    The transaction IDs of the venmo requests
-    """
-    confidence: float
-    """
-    A value between 0 and 1 of how "confident" chat GPT is in the match
-    """
-    confidence_reason: str
-    """
-    Chat GPTs reasoning for why it made this match
-    """
 
 
 def run_cli():
@@ -46,9 +27,6 @@ def run_cli():
         description="Automatically cash-out your Venmo balance as individual transfers"
     )
 
-    parser.add_argument(
-        "--quiet", action=argparse.BooleanOptionalAction, help="Do not produce any output"
-    )
     parser.add_argument(
         "--lunchmoney-token",
         type=str,
@@ -65,6 +43,12 @@ def run_cli():
         default=getenv("LUNCHMONEY_CATEGORY"),
         help="The category which contains un-sorted venmo transactions",
     )
+    parser.add_argument(
+        "--reimbursement-tag",
+        type=str,
+        default=getenv("REIMBURSEMENT_TAG"),
+        help="The name of the tag which marks transactions pending venmo reimbursements",
+    )
 
     args = parser.parse_args()
 
@@ -72,45 +56,88 @@ def run_cli():
     openai.api_key = args.openai_token
 
     categories = lunch.get_categories()
-
     try:
         venmo_category = next(c for c in categories if c.name == args.venmo_category)
     except StopIteration:
-        # TODO: What kind of error to show?
         logging.error(f"Cannot find Lunch Money category {args.venmo_category}")
         return
 
-    transactions = lunch.get_transactions(
-        status="uncleared",
-        start_date=datetime.now() - timedelta(days=CUTOFF_DAYS),
-        end_date=datetime.now(),
-    )
+    tags = lunch.get_tags()
+    try:
+        reimbursement_tag = next(t for t in tags if t.name == args.reimbursement_tag)
+    except StopIteration:
+        logging.error(f"Cannot find Lunch Money tag {args.reimbursement_tag}")
+        return
+
+    # Reduce the transaction to just candidate transactions. These transactions
+    # match the follwoing criteria
+    #
+    # - Venmo reimbursement transactions (amount is income)
+    # - Transactions marked with the reimbursement-tag
+    #
+    transactions = [
+        transaction
+        for transaction in lunch.get_transactions(
+            status="uncleared",
+            start_date=datetime.now() - timedelta(days=CUTOFF_DAYS),
+            end_date=datetime.now(),
+        )
+        if
+        # Ignore venmo expense transactions
+        not (transaction.category_id == venmo_category.id and transaction.amount > 0)
+        # Ingore transactions not marked with the reimbursement-tag
+        and not (
+            transaction.category_id != venmo_category.id
+            and not any(t for t in (transaction.tags or []) if t.id == reimbursement_tag.id)
+        )
+    ]
+
+    venmos = [t for t in transactions if t.category_id == venmo_category.id]
+    main_transactions = [t for t in transactions if t.category_id != venmo_category.id]
+
+    # Nothing to do if we have no venmo transactions
+    if not venmos:
+        logger.info("No transactions in the Venmo category, nothing to do.")
+        return
+
+    # Nothing to do if we have no transactions marked as pending venmos
+    if not main_transactions:
+        logger.info("No transactions pending venmo reimbursements, nothing to do.")
+        return
 
     transactions_map = {t.id: t for t in transactions}
 
-    messages = build_promp_messages(venmo_category.name, categories, transactions)
+    messages = build_prompt_messages(venmo_category.name, categories, transactions)
 
     # Ask chat GPT how to group venmo transactions
     response = openai.ChatCompletion.create(model="gpt-4", messages=messages)
 
-    if not isinstance(response, dict):
-        logging.warn("Did not get expected response from openai")
+    try:
+        assert isinstance(response, dict)
+        json_response = json.loads(response["choices"][0]["message"]["content"])
+    except:
+        logging.warn("Unexpected GPT-4 response", extra={"response": response})
         return
 
     groups = [
-        ReimbursmentGroup(**data)
-        for data in json.loads(response["choices"][0]["message"]["content"])
+        ReimbursmentGroup(
+            transaction=transactions_map[data["transaction_id"]],
+            matches=[transactions_map[id] for id in data["matches"]],
+            missing_reimbursements=data["missing_reimbursements"],
+            confidence=data["confidence"],
+            confidence_reason=data["confidence_reason"],
+        )
+        for data in json_response
     ]
 
     for group in groups:
-        main = transactions_map[group.transaction_id]
-        venmos = [transactions_map[id] for id in group.matches]
-
         print("")
-        print(f"{main.payee} (${main.amount})")
-        for venmo in venmos:
+        print(f"{group.transaction.payee} (${group.transaction.amount})")
+        for venmo in group.matches:
             print(f" -> {venmo.payee} paid ${abs(venmo.amount)} [note: {venmo.notes}]")
 
-        you_pay = Decimal(str(main.amount)) - sum(Decimal(str(abs(v.amount))) for v in venmos)
-        print(f" -> (you paid ${you_pay})")
-        print(f" ?? {group.confidence_reason}")
+        print(f" -> (you paid ${group.you_pay})")
+        print(f" ??: {group.confidence_reason}")
+
+        if group.missing_reimbursements:
+            print(f" !!: Pending additional reimbursements")
