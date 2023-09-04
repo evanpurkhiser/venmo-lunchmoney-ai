@@ -6,7 +6,7 @@ from lunchable.models import CategoriesObject, TransactionObject
 
 PROMPT = """
 You are given a CSV of my personal bank transactions. Positive amounts are
-expenses, negative are income. You will match reimbursemen transactions in the
+expenses, negative are income. You will match reimbursement transactions in the
 `{category}` category to any other  transaction that is not in the `{category}`
 category. It is possible that many `{category}` transactions match one main
 transaction. Once a `{category}` transaction has become part of a main
