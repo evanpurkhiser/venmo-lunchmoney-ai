@@ -9,6 +9,7 @@ dependencies = [
     "lunchable>=0.8.2",
     "openai>=0.28.0",
     "sentry-sdk>=1.30.0",
+    "python-telegram-bot>=20.5",
 ]
 requires-python = ">=3.11"
 readme = "README.md"

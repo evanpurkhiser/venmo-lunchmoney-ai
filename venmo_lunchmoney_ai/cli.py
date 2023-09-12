@@ -64,6 +64,18 @@ def run_cli():
         default=getenv("REIMBURSEMENT_TAG"),
         help="The name of the tag which marks transactions pending venmo reimbursements",
     )
+    parser.add_argument(
+        "--telegram-token",
+        type=str,
+        default=getenv("TELEGRAM_TOKEN"),
+        help="Telegram bot token for notifications",
+    )
+    parser.add_argument(
+        "--telegram-channel",
+        type=str,
+        default=getenv("TELEGRAM_CHANNEL"),
+        help="The telegram channel ID to send notifications to",
+    )
 
     args = parser.parse_args()
 
