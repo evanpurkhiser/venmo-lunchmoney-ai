@@ -89,24 +89,28 @@ def run_cli():
     lunch = LunchMoney(access_token=args.lunchmoney_token)
     openai.api_key = args.openai_token
 
+    # Validate some args
     categories = lunch.get_categories()
     try:
         venmo_category = next(c for c in categories if c.name == args.venmo_category)
+        logger.info(f"Found venmo category: {venmo_category.name}")
     except StopIteration:
-        logger.error(f"Cannot find Lunch Money category {args.venmo_category}")
+        logger.error(f"Cannot find Lunchmoney category {args.venmo_category}")
         return
 
     try:
         reimbursed_category = next(c for c in categories if c.name == args.reimbursed_category)
+        logger.info(f"Found reimbursed category: {reimbursed_category.name}")
     except StopIteration:
-        logger.error(f"Cannot find Lunch Money category {args.reimbursed_category}")
+        logger.error(f"Cannot find Lunchmoney category {args.reimbursed_category}")
         return
 
     tags = lunch.get_tags()
     try:
         reimbursement_tag = next(t for t in tags if t.name == args.reimbursement_tag)
+        logger.info(f"Found reimbursed tag: {reimbursement_tag.name}")
     except StopIteration:
-        logger.error(f"Cannot find Lunch Money tag {args.reimbursement_tag}")
+        logger.error(f"Cannot find Lunchmoney tag {args.reimbursement_tag}")
         return
 
     # Reduce the transaction to just candidate transactions. These transactions
