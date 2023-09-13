@@ -1,9 +1,8 @@
-import argparse
 import json
 import logging
 from datetime import datetime, timedelta
-from os import getenv
 
+import configargparse
 import openai
 from lunchable import LunchMoney
 
@@ -24,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(
+    parser = configargparse.ArgParser(
         description="Automatically cash-out your Venmo balance as individual transfers"
     )
 
@@ -38,42 +37,49 @@ def parse_args():
     parser.add_argument(
         "--lunchmoney-token",
         type=str,
-        default=getenv("LUNCHMONEY_TOKEN"),
+        required=True,
+        env_var="LUNCHMONEY_TOKEN",
     )
     parser.add_argument(
         "--openai-token",
         type=str,
-        default=getenv("OPENAI_TOKEN"),
+        required=True,
+        env_var="OPENAI_TOKEN",
     )
     parser.add_argument(
         "--venmo-category",
         type=str,
-        default=getenv("VENMO_CATEGORY"),
+        required=True,
+        env_var="VENMO_CATEGORY",
         help="The category which contains un-sorted venmo transactions",
     )
     parser.add_argument(
         "--reimbursed-category",
         type=str,
-        default=getenv("REIMBURSED_CATEGORY"),
+        required=True,
+        env_var="REIMBURSED_CATEGORY",
         help="The category that grouped reimbursments will become a part of",
     )
 
     parser.add_argument(
         "--reimbursement-tag",
         type=str,
-        default=getenv("REIMBURSEMENT_TAG"),
+        required=True,
+        env_var="REIMBURSEMENT_TAG",
         help="The name of the tag which marks transactions pending venmo reimbursements",
     )
     parser.add_argument(
         "--telegram-token",
         type=str,
-        default=getenv("TELEGRAM_TOKEN"),
+        required=True,
+        env_var="TELEGRAM_TOKEN",
         help="Telegram bot token for notifications",
     )
     parser.add_argument(
         "--telegram-channel",
         type=str,
-        default=getenv("TELEGRAM_CHANNEL"),
+        required=True,
+        env_var="TELEGRAM_CHANNEL",
         help="The telegram channel ID to send notifications to",
     )
 
