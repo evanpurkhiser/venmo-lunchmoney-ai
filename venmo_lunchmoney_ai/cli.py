@@ -23,7 +23,7 @@ This only needs to be as high as how long we might expect for someone to
 logger = logging.getLogger(__name__)
 
 
-def run_cli():
+def parse_args():
     parser = argparse.ArgumentParser(
         description="Automatically cash-out your Venmo balance as individual transfers"
     )
@@ -77,7 +77,11 @@ def run_cli():
         help="The telegram channel ID to send notifications to",
     )
 
-    args = parser.parse_args()
+    return parser.parse_args()
+
+
+def run_cli():
+    args = parse_args()
 
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
