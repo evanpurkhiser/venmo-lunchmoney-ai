@@ -12,7 +12,8 @@ def notify_telegram(
     token: str,
     channel_id: str,
 ):
-    asyncio.run_until_complete(notify_telegram_async(group, token, channel_id))
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(notify_telegram_async(group, token, channel_id))
 
 
 async def notify_telegram_async(
