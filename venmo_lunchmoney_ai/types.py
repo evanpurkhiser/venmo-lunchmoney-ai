@@ -42,3 +42,10 @@ class ReimbursmentGroup:
         Computes how much was reimbursed for the transaction
         """
         return sum(Decimal(str(abs(match.amount))) for match in self.matches)
+
+    @property
+    def transactions(self):
+        """
+        Retrieve all transactions belonging to this group
+        """
+        return [self.transaction, *self.matches]

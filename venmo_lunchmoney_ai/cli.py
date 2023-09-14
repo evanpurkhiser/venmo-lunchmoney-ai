@@ -1,13 +1,21 @@
 import json
 import logging
 from datetime import datetime, timedelta
+from typing import List
 
 import configargparse
 import openai
+import sentry_sdk
 from lunchable import LunchMoney
+from lunchable.models import TransactionObject
 
 from venmo_lunchmoney_ai.grouping import create_lunchmoney_group
+from venmo_lunchmoney_ai.notify import notify_telegram
 from venmo_lunchmoney_ai.prompt import build_prompt_messages
+from venmo_lunchmoney_ai.state import (
+    get_prev_unprocessed_transactions,
+    set_prev_unprocessed_transactions,
+)
 from venmo_lunchmoney_ai.types import ReimbursmentGroup
 
 CUTOFF_DAYS = 60
@@ -33,7 +41,12 @@ def parse_args():
         help="increase output verbosity",
         action="store_true",
     )
-
+    parser.add_argument(
+        "-d",
+        "--dry-run",
+        help="Take no actions",
+        action="store_true",
+    )
     parser.add_argument(
         "--lunchmoney-token",
         type=str,
@@ -60,7 +73,6 @@ def parse_args():
         env_var="REIMBURSED_CATEGORY",
         help="The category that grouped reimbursments will become a part of",
     )
-
     parser.add_argument(
         "--reimbursement-tag",
         type=str,
@@ -82,6 +94,13 @@ def parse_args():
         env_var="TELEGRAM_CHANNEL",
         help="The telegram channel ID to send notifications to",
     )
+    parser.add_argument(
+        "--state-file",
+        type=str,
+        required=True,
+        env_var="STATE_FILE",
+        help="Used to track previous runs ",
+    )
 
     return parser.parse_args()
 
@@ -90,7 +109,12 @@ def run_cli():
     args = parse_args()
 
     if args.verbose:
-        logging.basicConfig(level=logging.DEBUG)
+        logging.basicConfig(level=logging.INFO)
+
+    dry_run = args.dry_run
+
+    if dry_run:
+        logger.info("Running in dry-run mode. Transactions will not be modified.")
 
     lunch = LunchMoney(access_token=args.lunchmoney_token)
     openai.api_key = args.openai_token
@@ -118,6 +142,10 @@ def run_cli():
     except StopIteration:
         logger.error(f"Cannot find Lunchmoney tag {args.reimbursement_tag}")
         return
+
+    prev_unprocessed_txns = get_prev_unprocessed_transactions(args.state_file)
+
+    logger.info(f"Previous unprocessed transactions: {prev_unprocessed_txns}")
 
     # Reduce the transaction to just candidate transactions. These transactions
     # match the follwoing criteria
@@ -147,6 +175,8 @@ def run_cli():
     venmos = [t for t in transactions if t.category_id == venmo_category.id]
     main_transactions = [t for t in transactions if t.category_id != venmo_category.id]
 
+    transacton_ids = set(t.id for t in transactions)
+
     # Nothing to do if we have no venmo transactions
     if not venmos:
         logger.info("No transactions in the Venmo category, nothing to do.")
@@ -157,11 +187,14 @@ def run_cli():
         logger.info("No transactions pending venmo reimbursements, nothing to do.")
         return
 
-    transactions_map = {t.id: t for t in transactions}
-
-    messages = build_prompt_messages(venmo_category.name, categories, transactions)
+    # Nothing to do if we have the same set of transactions from our last run
+    if transacton_ids == prev_unprocessed_txns:
+        logger.info("Same set of transactions from last run. Nothing to do")
+        return
 
     # Ask chat GPT how to group venmo transactions
+    logger.info("Sending prompt to GPT-4...")
+    messages = build_prompt_messages(venmo_category.name, categories, transactions)
     response = openai.ChatCompletion.create(model="gpt-4", messages=messages)
 
     try:
@@ -170,6 +203,8 @@ def run_cli():
     except:
         logger.warn("Unexpected GPT-4 response", extra={"response": response})
         return
+
+    transactions_map = {t.id: t for t in transactions}
 
     groups = [
         ReimbursmentGroup(
@@ -182,17 +217,46 @@ def run_cli():
         for data in json_response
     ]
 
-    for group in groups:
-        if not group.missing_reimbursements:
-            create_lunchmoney_group(lunch, reimbursed_category, group)
+    # Groups ready to be converted to lunchmoeny groups
+    ready_groups = [group for group in groups if not group.missing_reimbursements]
 
-        print("")
-        print(f"{group.transaction.payee} (${group.transaction.amount})")
-        for venmo in group.matches:
-            print(f" -> {venmo.payee} paid ${abs(venmo.amount)} [note: {venmo.notes}]")
+    # Transactions that were succesffuly converted into lunch money transactions
+    successful_transactions: List[TransactionObject] = []
 
-        print(f" -> (you paid ${group.you_pay})")
-        print(f" ??: {group.confidence_reason}")
+    for group in ready_groups:
+        names = [t.payee or "" for t in group.matches]
+        logger.info(f"Found group for {group.transaction.payee} {names}")
 
-        if group.missing_reimbursements:
-            print(f" !!: Pending additional reimbursements")
+        try:
+            if not dry_run:
+                create_lunchmoney_group(lunch, reimbursed_category, group)
+            else:
+                logger.info("Skipping lunchmoney split in dry-run")
+            successful_transactions.extend(group.transactions)
+        except Exception as e:
+            logger.warn(
+                f"Failed to create group for: {group.transaction.payee}",
+                exc_info=True,
+            )
+            sentry_sdk.capture_exception(e)
+            continue
+
+        try:
+            notify_telegram(group, args.telegram_token, args.telegram_channel)
+        except Exception as e:
+            logger.warn(
+                f"Failed to send telegram notification for: {group.transaction.payee}",
+                exc_info=True,
+            )
+            sentry_sdk.capture_exception(e)
+            continue
+
+    # Record what transactions were skippsed. We'll use this during the next
+    # run to know if we have new transactions or not.
+    skipped_ids = list(transacton_ids - set(t.id for t in successful_transactions))
+    logger.info(f"Skipped transactions: {skipped_ids}")
+
+    if not dry_run:
+        set_prev_unprocessed_transactions(args.state_file, skipped_ids)
+    else:
+        logger.info("Not saving skipped transactions to state file in dry-run")
