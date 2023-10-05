@@ -24,7 +24,7 @@ async def notify_telegram_async(
     def e(value: str):
         return escape_markdown(value, version=2)
 
-    header = f"*Venmo Groupped*"
+    header = f"*Venmo Grouped*"
     name = e(f"{group.transaction.payee} (${group.transaction.amount})")
     paid_rows = [
         e(f" → {venmo.payee} paid ${abs(venmo.amount)} [{venmo.notes}]") for venmo in group.matches
