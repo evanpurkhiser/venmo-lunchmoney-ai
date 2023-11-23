@@ -57,6 +57,9 @@ need to be followed to avoid large spend on OpenAI API calls.
    number of people you expect to reimburse you in the transaction notes.
    Transactions without notes will NOT be considered.
 
+   You can put the "real note" in brackets like `[real note here]` to have the
+   final split transaction include this note.
+
    We do this to allow GPT-4 to understand if a transaction is still waiting
    for more transactions to appear.
 

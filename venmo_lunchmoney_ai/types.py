@@ -1,8 +1,19 @@
 from dataclasses import dataclass
 from decimal import Decimal
+import re
 from typing import List
 
 from lunchable.models import TransactionObject
+
+NOTE_MATCH = r"[^]]*(\[(?P<main_note>[^]]+)\])?$"
+"""
+Regex used to match the "main note" out of a the original transaction note.
+Since typically we might write a note that looks like this:
+
+> Waiting on Ran and Eric [Dumpligs during Erics Trip]
+
+This regex will extract the "Dumpligs during Erics Trip"
+"""
 
 
 @dataclass
@@ -58,3 +69,12 @@ class ReimbursmentGroup:
         Retrieve all transactions belonging to this group
         """
         return [self.transaction, *self.matches]
+
+    @property
+    def main_note(self):
+        """
+        Extract the main note from the original transaction.
+        """
+        match = re.match(NOTE_MATCH, self.transaction.note)
+
+        return match.groupdict().get("main_note", "") if note_match else ""

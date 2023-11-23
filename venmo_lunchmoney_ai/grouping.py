@@ -25,7 +25,7 @@ def split_transaction(
         TransactionSplitObject(
             date=group.transaction.date,
             category_id=group.transaction.category_id,
-            notes=group.transaction.notes,
+            notes=group.main_note,
             amount=float(group.you_pay),
         ),
     ]
