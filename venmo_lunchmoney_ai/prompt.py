@@ -33,13 +33,12 @@ portion of the main transaction is something I myself paid for. There may be
 cases where I pay for something, and the entire cost is covered by `{category}`
 transactions, though it is rare.
 
-Main transactions must ALWAYS included a note that either mentions the names of
-the people I expect to reimburse me for the transaction OR the number of
-reimbursements I expect. We calculate a `missing_reimbursements` boolean. For
-example if a transaction specifies we're waiting on Eric, Randolf, and Joe, but
-there is only a `{category}` reimbursement from Randolf, then the value is
-true. If a note containing this information is missing do not include this
-transaction group in your response.
+Main transactions must ALWAYS included a note that mentions the names of the
+people I expect to reimburse me for the transaction. We calculate a
+`missing_reimbursements` boolean. For example if a transaction specifies we're
+waiting on Eric, Randolf, and Joe, but there is only a `{category}`
+reimbursement from Randolf, then the value is true. If a note containing this
+information is missing do not include this transaction group in your response.
 
 Be aware, the `notes` column for `{category}` transactions is user input from
 the friend reimbursing me, so will not usually perfectly match the payee name.
