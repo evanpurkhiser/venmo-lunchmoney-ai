@@ -1,6 +1,6 @@
+import re
 from dataclasses import dataclass
 from decimal import Decimal
-import re
 from typing import List
 
 from lunchable.models import TransactionObject
@@ -47,6 +47,7 @@ class ReimbursmentGroup:
         still missing_reimbursements or the `you_pay` is caluclated as negative
         (GPT failed to match) the transaction is not ready.
         """
+        print(not self.missing_reimbursements and self.you_pay >= 0)
         return not self.missing_reimbursements and self.you_pay >= 0
 
     @property

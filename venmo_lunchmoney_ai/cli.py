@@ -218,7 +218,7 @@ def run_cli():
     ]
 
     # Groups ready to be converted to lunchmoeny groups
-    ready_groups = [group for group in groups if not group.is_ready]
+    ready_groups = [group for group in groups if group.is_ready]
 
     # Transactions that were succesffuly converted into lunch money transactions
     successful_transactions: List[TransactionObject] = []
