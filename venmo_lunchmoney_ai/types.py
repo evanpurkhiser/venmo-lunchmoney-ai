@@ -75,6 +75,6 @@ class ReimbursmentGroup:
         """
         Extract the main note from the original transaction.
         """
-        match = re.match(NOTE_MATCH, self.transaction.note)
+        match = re.match(NOTE_MATCH, self.transaction.notes)
 
-        return match.groupdict().get("main_note", "") if note_match else ""
+        return match.groupdict().get("main_note", "") if match else ""
