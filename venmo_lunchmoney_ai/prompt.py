@@ -119,7 +119,6 @@ def build_prompt_messages(
             "original_name": t.original_name,
         }
         for t in transaction_list
-        if t.group_id is None
     ]
 
     system_prompt = PROMPT.format(category=category)
