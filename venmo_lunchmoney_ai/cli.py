@@ -164,7 +164,7 @@ def run_cli():
         # Ignore already groupped transactions
         not transaction.group_id
         # Ignore venmo expense transactions
-        not (transaction.category_id == venmo_category.id and transaction.amount > 0)
+        and not (transaction.category_id == venmo_category.id and transaction.amount > 0)
         # Ingore transactions not marked with the reimbursement-tag
         and not (
             transaction.category_id != venmo_category.id
