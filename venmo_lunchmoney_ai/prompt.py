@@ -1,6 +1,5 @@
 import csv
 import io
-from typing import List
 
 from lunchable.models import CategoriesObject, TransactionObject
 
@@ -105,8 +104,8 @@ def table_to_csv_string(table):
 
 def build_prompt_messages(
     category: str,
-    categories: List[CategoriesObject],
-    transaction_list: List[TransactionObject],
+    categories: list[CategoriesObject],
+    transaction_list: list[TransactionObject],
 ):
     category_map = {c.id: c.name for c in categories}
     table = [

@@ -1,7 +1,6 @@
 import json
 import logging
 from datetime import datetime, timedelta
-from typing import List
 
 import configargparse
 import openai
@@ -223,7 +222,7 @@ def run_cli():
     ready_groups = [group for group in groups if group.is_ready]
 
     # Transactions that were succesffuly converted into lunch money transactions
-    successful_transactions: List[TransactionObject] = []
+    successful_transactions: list[TransactionObject] = []
 
     for group in ready_groups:
         names = [t.payee or "" for t in group.matches]

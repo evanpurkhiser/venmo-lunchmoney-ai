@@ -1,8 +1,7 @@
 import json
-from typing import List
 
 
-def get_prev_unprocessed_transactions(file: str) -> List[int]:
+def get_prev_unprocessed_transactions(file: str) -> list[int]:
     try:
         with open(file, "r") as f:
             return json.load(f)
@@ -10,6 +9,6 @@ def get_prev_unprocessed_transactions(file: str) -> List[int]:
         return []
 
 
-def set_prev_unprocessed_transactions(file: str, transaction_ids: List[int]):
+def set_prev_unprocessed_transactions(file: str, transaction_ids: list[int]):
     with open(file, "w") as f:
         json.dump(transaction_ids, f)
