@@ -177,6 +177,7 @@ def run_cli():
     main_transactions = [t for t in transactions if t.category_id != venmo_category.id]
 
     transacton_ids = set(t.id for t in transactions)
+    logger.info(f"Lunchmoney transaction IDs are: {transacton_ids}")
 
     # Nothing to do if we have no venmo transactions
     if not venmos:
