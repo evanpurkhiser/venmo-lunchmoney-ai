@@ -39,6 +39,7 @@ def parse_args():
         "--verbose",
         help="increase output verbosity",
         action="store_true",
+        env_var="VENMO_LUNCHMONEY_AI_VERBOSE",
     )
     parser.add_argument(
         "-d",
