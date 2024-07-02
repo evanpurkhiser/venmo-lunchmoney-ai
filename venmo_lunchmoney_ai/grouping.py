@@ -1,13 +1,13 @@
 from lunchable import LunchMoney
 from lunchable.models import CategoriesObject, TransactionSplitObject
 
-from venmo_lunchmoney_ai.types import ReimbursmentGroup
+from venmo_lunchmoney_ai.types import ReimbursementGroup
 
 
 def split_transaction(
     lunch: LunchMoney,
     reimbursed_category: CategoriesObject,
-    group: ReimbursmentGroup,
+    group: ReimbursementGroup,
 ):
     """
     Splits the main transaction into two transactions, the portiona paid by me
@@ -45,7 +45,7 @@ def split_transaction(
 def create_lunchmoney_group(
     lunch: LunchMoney,
     reimbursed_category: CategoriesObject,
-    group: ReimbursmentGroup,
+    group: ReimbursementGroup,
 ):
     """
     Splits the main transaction and groups the reimbursement transactions

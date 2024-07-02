@@ -17,7 +17,7 @@ This regex will extract the "Dumpligs during Erics Trip"
 
 
 @dataclass
-class ReimbursmentGroup:
+class ReimbursementGroup:
     transaction: TransactionObject
     """
     The main transaction which money is being reimbursed to

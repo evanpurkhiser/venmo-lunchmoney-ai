@@ -15,7 +15,7 @@ from venmo_lunchmoney_ai.state import (
     get_prev_unprocessed_transactions,
     set_prev_unprocessed_transactions,
 )
-from venmo_lunchmoney_ai.types import ReimbursmentGroup
+from venmo_lunchmoney_ai.types import ReimbursementGroup
 
 CUTOFF_DAYS = 60
 """
@@ -210,7 +210,7 @@ def run_cli():
     transactions_map = {t.id: t for t in transactions}
 
     groups = [
-        ReimbursmentGroup(
+        ReimbursementGroup(
             transaction=transactions_map[data["transaction_id"]],
             matches=[transactions_map[id] for id in data["matches"]],
             missing_reimbursements=data["missing_reimbursements"],

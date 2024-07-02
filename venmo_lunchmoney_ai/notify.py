@@ -4,11 +4,11 @@ from telegram import Bot
 from telegram.constants import ParseMode
 from telegram.helpers import escape_markdown
 
-from venmo_lunchmoney_ai.types import ReimbursmentGroup
+from venmo_lunchmoney_ai.types import ReimbursementGroup
 
 
 def notify_telegram(
-    group: ReimbursmentGroup,
+    group: ReimbursementGroup,
     token: str,
     channel_id: str,
 ):
@@ -17,7 +17,7 @@ def notify_telegram(
 
 
 async def notify_telegram_async(
-    group: ReimbursmentGroup,
+    group: ReimbursementGroup,
     token: str,
     channel_id: str,
 ):
