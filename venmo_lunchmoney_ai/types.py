@@ -43,8 +43,8 @@ class ReimbursmentGroup:
     @property
     def is_ready(self):
         """
-        Determines if the transcation group is ready to be processed. If we are
-        still missing_reimbursements or the `you_pay` is caluclated as negative
+        Determines if the transaction group is ready to be processed. If we are
+        still missing_reimbursements or the `you_pay` is calculated as negative
         (GPT failed to match) the transaction is not ready.
         """
         print(not self.missing_reimbursements and self.you_pay >= 0)

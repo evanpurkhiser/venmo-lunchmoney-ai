@@ -30,7 +30,7 @@ Ramen Nagi ($60.76)
 ### Workflow requirements
 
 This tool is intended to be run on a crontab where it will automatically handle
-grouping transactions, becuase of this there are some workflow constraints that
+grouping transactions, because of this there are some workflow constraints that
 need to be followed to avoid large spend on OpenAI API calls.
 
 1. You will need to be using something like

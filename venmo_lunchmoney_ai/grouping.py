@@ -14,7 +14,7 @@ def split_transaction(
     and the portion that is being reimbursed by the venmo transactions
     """
     split_objects = [
-        # Reimbursment venmos
+        # Reimbursement venmos
         TransactionSplitObject(
             date=group.transaction.date,
             category_id=reimbursed_category.id,
@@ -59,7 +59,7 @@ def create_lunchmoney_group(
 
     lunch.insert_transaction_group(
         date=group.transaction.date,
-        payee=group.transaction.payee or "Venmo Reimbursment",
+        payee=group.transaction.payee or "Venmo Reimbursement",
         category_id=reimbursed_category.id,
         notes=", ".join(m.payee.split()[0] for m in group.matches),
         transactions=[t.id for t in [target_transaction, *group.matches]],

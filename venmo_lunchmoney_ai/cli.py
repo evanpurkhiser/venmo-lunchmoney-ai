@@ -148,7 +148,7 @@ def run_cli():
     logger.info(f"Previous unprocessed transactions: {prev_unprocessed_txns}")
 
     # Reduce the transaction to just candidate transactions. These transactions
-    # match the follwoing criteria
+    # match the following criteria
     #
     # - Venmo reimbursement transactions (amount is income)
     # - Transactions marked with the reimbursement-tag
@@ -161,11 +161,11 @@ def run_cli():
             end_date=datetime.now(),
         )
         if
-        # Ignore already groupped transactions
+        # Ignore already grouped transactions
         not transaction.group_id
         # Ignore venmo expense transactions
         and not (transaction.category_id == venmo_category.id and transaction.amount > 0)
-        # Ingore transactions not marked with the reimbursement-tag
+        # Ignore transactions not marked with the reimbursement-tag
         and not (
             transaction.category_id != venmo_category.id
             and not any(t for t in (transaction.tags or []) if t.id == reimbursement_tag.id)
