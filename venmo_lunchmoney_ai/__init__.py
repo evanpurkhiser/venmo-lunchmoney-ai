@@ -1,7 +1,8 @@
 from os import getenv
 
-from venmo_lunchmoney_ai.cli import run_cli
 import sentry_sdk
+
+from venmo_lunchmoney_ai.cli import run_cli
 
 sentry_dsn = getenv("SENTRY_DSN")
 if sentry_dsn is not None:
