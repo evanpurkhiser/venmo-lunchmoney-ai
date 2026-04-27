@@ -1,3 +1,3 @@
 #!/usr/bin/env sh
 
-exec pdm run venmo-lunchmoney-ai
+exec venmo-lunchmoney-ai
