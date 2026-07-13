@@ -48,7 +48,7 @@ need to be followed to avoid large spend on OpenAI API calls.
    (specified by `--reimbursement-tag`) to indicate to the tool that a
    transaction should be considered for matching.
 
-   > [!NOTE]  
+   > [!NOTE]
    > Only transactions with the `reimbursement-tag` and Vemmo income
    > transactions will be sent to OpenAI.
 
