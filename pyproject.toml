@@ -1,13 +1,14 @@
 [project]
 name = "venmo-lunchmoney-ai"
 version = "1.0"
-description = "A tool that uses GPT-4 to group venmo transactions on Lunch Money"
+description = "A tool that uses OpenAI to group Venmo transactions on Lunch Money"
 authors = [
     {name = "Evan Purkhiser", email = "venmo-lunchmoney-ai.py@evanpurkhiser.com"},
 ]
 dependencies = [
     "lunchable>=0.8.2",
-    "openai>=0.28.0",
+    "openai>=2.32.0",
+    "pydantic>=2.0.0",
     "sentry-sdk>=1.30.0",
     "python-telegram-bot>=20.5",
     "configargparse>=1.7",
