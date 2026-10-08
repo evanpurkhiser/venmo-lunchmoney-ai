@@ -28,16 +28,16 @@ class ReimbursementGroup:
     """
     missing_reimbursements: bool
     """
-    Indicates that GPT-4 thinks the group is still waiting for additional venmo
+    Indicates that the model thinks the group is still waiting for additional Venmo
     reimbursement transactions to appear
     """
     confidence: float
     """
-    A value between 0 and 1 of how "confident" chat GPT is in the match
+    A value between 0 and 1 for the model's confidence in the match
     """
     confidence_reason: str
     """
-    Chat GPTs reasoning for why it made this match
+    The model's reasoning for why it made this match
     """
 
     @property
@@ -45,7 +45,7 @@ class ReimbursementGroup:
         """
         Determines if the transaction group is ready to be processed. If we are
         still missing_reimbursements or the `you_pay` is calculated as negative
-        (GPT failed to match) the transaction is not ready.
+        (the model failed to match) the transaction is not ready.
         """
         print(not self.missing_reimbursements and self.you_pay >= 0)
         return not self.missing_reimbursements and self.you_pay >= 0

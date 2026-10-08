@@ -3,7 +3,7 @@
 > [!IMPORTANT]
 > This is still a work in progress!
 
-This is a small tool that uses GPT-4 to try and match one or many Venmo
+This is a small tool that uses OpenAI to try and match one or many Venmo
 reimbursement transactions in [Lunchmoney](https://lunchmoney.app/) to the
 transaction that is being reimbursed.
 
@@ -40,7 +40,7 @@ need to be followed to avoid large spend on OpenAI API calls.
    knowledge of the Venmo transactions themselves, only venmo transactions
    within Lunchmoney.
 
-   GPT-4 may use the names and notes of the Venmo transactions to help
+   The model may use the names and notes of the Venmo transactions to help
    understand where to match those transactions, so it's ideal that that
    metadata is included in the Lunchmoney transactions.
 
@@ -60,15 +60,15 @@ need to be followed to avoid large spend on OpenAI API calls.
    You can put the "real note" in brackets like `[real note here]` to have the
    final split transaction include this note.
 
-   We do this to allow GPT-4 to understand if a transaction is still waiting
+   We do this to let the model determine if a transaction is still waiting
    for more transactions to appear.
 
 ### Efficiency
 
 The tool maintains state in the `--history-db` of previously processed
-transactions. During each run the tool will ONLY talk to GPT-4 when the
+transactions. During each run the tool will ONLY call OpenAI when the
 list of transactions queried from Lunch money is different from the previously
 un grouped transaction list.
 
-This means we will only talk to GPT-4 when we have new information to attempt
+This means we will only call OpenAI when we have new information to attempt
 to match transactions

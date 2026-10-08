@@ -1,14 +1,14 @@
-import json
 import logging
 from datetime import datetime, timedelta
 
 import configargparse
-import openai
 import sentry_sdk
 from lunchable import LunchMoney
 from lunchable.models import TransactionObject
+from openai import OpenAI
 
 from venmo_lunchmoney_ai.grouping import create_lunchmoney_group
+from venmo_lunchmoney_ai.matching import MODEL, match_reimbursements
 from venmo_lunchmoney_ai.notify import notify_telegram
 from venmo_lunchmoney_ai.prompt import build_prompt_messages
 from venmo_lunchmoney_ai.state import (
@@ -117,7 +117,7 @@ def run_cli():
         logger.info("Running in dry-run mode. Transactions will not be modified.")
 
     lunch = LunchMoney(access_token=args.lunchmoney_token)
-    openai.api_key = args.openai_token
+    openai_client = OpenAI(api_key=args.openai_token)
 
     # Validate some args
     categories = lunch.get_categories()
@@ -195,29 +195,26 @@ def run_cli():
         logger.info("Same set of transactions from last run. Nothing to do")
         return
 
-    # Ask chat GPT how to group venmo transactions
-    logger.info("Sending prompt to GPT-4...")
+    logger.info(f"Sending prompt to {MODEL}...")
     messages = build_prompt_messages(venmo_category.name, categories, transactions)
-    response = openai.ChatCompletion.create(model="gpt-4", messages=messages)
 
     try:
-        assert isinstance(response, dict)
-        json_response = json.loads(response["choices"][0]["message"]["content"])
-    except:
-        logger.warn("Unexpected GPT-4 response", extra={"response": response})
+        matches = match_reimbursements(openai_client, messages)
+    except ValueError:
+        logger.warning("Unexpected response from %s", MODEL, exc_info=True)
         return
 
     transactions_map = {t.id: t for t in transactions}
 
     groups = [
         ReimbursementGroup(
-            transaction=transactions_map[data["transaction_id"]],
-            matches=[transactions_map[id] for id in data["matches"]],
-            missing_reimbursements=data["missing_reimbursements"],
-            confidence=data["confidence"],
-            confidence_reason=data["confidence_reason"],
+            transaction=transactions_map[data.transaction_id],
+            matches=[transactions_map[id] for id in data.matches],
+            missing_reimbursements=data.missing_reimbursements,
+            confidence=data.confidence,
+            confidence_reason=data.confidence_reason,
         )
-        for data in json_response
+        for data in matches
     ]
 
     # Groups ready to be converted to lunchmoeny groups

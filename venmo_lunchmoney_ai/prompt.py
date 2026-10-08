@@ -46,15 +46,17 @@ If it does perfectly match then we have a very high confidence.
 Your output for this example is as follows.
 
 ```json
-[
-  {{
-    "transaction_id": 242330918,
-    "matches": [242330919],
-    "missing_reimbursements": false,
-    "confidence": 0.9,
-    "confidence_reason": "Amount evently divides and exact payee name is in the note"
-  }}
-]
+{{
+  "groups": [
+    {{
+      "transaction_id": 242330918,
+      "matches": [242330919],
+      "missing_reimbursements": false,
+      "confidence": 0.9,
+      "confidence_reason": "Amount evenly divides and exact payee name is in the note"
+    }}
+  ]
+}}
 ```
 
 - Note that the schema will ALWAYS match the above data types.

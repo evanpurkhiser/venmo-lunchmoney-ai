@@ -542,6 +542,7 @@ dependencies = [
     { name = "configargparse" },
     { name = "lunchable" },
     { name = "openai" },
+    { name = "pydantic" },
     { name = "python-telegram-bot" },
     { name = "sentry-sdk" },
 ]
@@ -555,7 +556,8 @@ dev = [
 requires-dist = [
     { name = "configargparse", specifier = ">=1.7" },
     { name = "lunchable", specifier = ">=0.8.2" },
-    { name = "openai", specifier = ">=0.28.0" },
+    { name = "openai", specifier = ">=2.32.0" },
+    { name = "pydantic", specifier = ">=2.0.0" },
     { name = "python-telegram-bot", specifier = ">=20.5" },
     { name = "sentry-sdk", specifier = ">=1.30.0" },
 ]
