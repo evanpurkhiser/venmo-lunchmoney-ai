@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import date, timedelta
 
 import configargparse
 import sentry_sdk
@@ -157,8 +157,8 @@ def run_cli():
         transaction
         for transaction in lunch.get_transactions(
             status="uncleared",
-            start_date=datetime.now() - timedelta(days=CUTOFF_DAYS),
-            end_date=datetime.now(),
+            start_date=date.today() - timedelta(days=CUTOFF_DAYS),
+            end_date=date.today(),
         )
         if
         # Ignore already grouped transactions
