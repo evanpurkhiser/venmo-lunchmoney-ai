@@ -1,13 +1,14 @@
-## Venmo Lunchmoney AI Tool
+# Venmo Lunchmoney AI Tool
 
 > [!IMPORTANT]
 > This is still a work in progress!
 
-This is a small tool that uses OpenAI to try and match one or many Venmo
-reimbursement transactions in [Lunchmoney](https://lunchmoney.app/) to the
-transaction that is being reimbursed.
+This is a small tool that uses OpenAI to try and match one
+or many Venmo reimbursement transactions in
+[Lunchmoney](https://lunchmoney.app/) to the transaction that is being
+reimbursed.
 
-```
+```text
 $ venmo-lunchmoney-ai
 
 El Lopo ($60.0)
@@ -27,30 +28,33 @@ Ramen Nagi ($60.76)
  ?? Amount evenly divides and exact payee name is in the note
 ```
 
-### Workflow requirements
+## Workflow requirements
 
-This tool is intended to be run on a crontab where it will automatically handle
-grouping transactions, because of this there are some workflow constraints that
-need to be followed to avoid large spend on OpenAI API calls.
+This tool is intended to be run on a crontab
+where it will automatically handle grouping transactions,
+because of this there are some workflow constraints
+that need to be followed to avoid large spend on OpenAI API calls.
 
 1. You will need to be using something like
    [Venmo-auto-cashout](https://github.com/evanpurkhiser/venmo-auto-cashout) to
    create individual transactions within Lunchmoney for every incoming Venmo
-   transaction. This tool cannot split large Venmo bank transfers, it has no
-   knowledge of the Venmo transactions themselves, only venmo transactions
-   within Lunchmoney.
+   transaction.
+   This tool cannot split large Venmo bank transfers,
+   it has no knowledge of the Venmo transactions themselves,
+   only venmo transactions within Lunchmoney.
 
-   The model may use the names and notes of the Venmo transactions to help
-   understand where to match those transactions, so it's ideal that that
-   metadata is included in the Lunchmoney transactions.
+   The model may use the names
+   and notes of the Venmo transactions to help understand
+   where to match those transactions,
+   so it's ideal that that metadata is included in the Lunchmoney transactions.
 
 2. Transactions that are being reimbursed MUST be marked with a specific tag
-   (specified by `--reimbursement-tag`) to indicate to the tool that a
-   transaction should be considered for matching.
+   (specified by `--reimbursement-tag`)
+   to indicate to the tool that a transaction should be considered for matching.
 
    > [!NOTE]
-   > Only transactions with the `reimbursement-tag` and Vemmo income
-   > transactions will be sent to OpenAI.
+   > Only transactions with the `reimbursement-tag`
+   > and Vemmo income transactions will be sent to OpenAI.
 
 3. For transactions marked with the `reimbursement-tag` you MUST specify either
    the names of who you expect to receive Venmo reimbursements from OR the
@@ -66,9 +70,10 @@ need to be followed to avoid large spend on OpenAI API calls.
 ### Efficiency
 
 The tool maintains state in the `--history-db` of previously processed
-transactions. During each run the tool will ONLY call OpenAI when the
-list of transactions queried from Lunch money is different from the previously
-un grouped transaction list.
+transactions.
+During each run the tool will ONLY call OpenAI
+when the list of transactions queried from Lunch money is different from the
+previously un grouped transaction list.
 
-This means we will only call OpenAI when we have new information to attempt
-to match transactions
+This means we will only call OpenAI
+when we have new information to attempt to match transactions
